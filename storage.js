@@ -15,10 +15,13 @@ let inMemoryDb = null;
 
 function createSeed() {
   const now = new Date().toISOString();
+  const adminId = "seed-admin-user";
+  const studentId = "seed-student-user";
+  const eventId = "seed-event-innovation-expo-2026";
   return {
     users: [
       {
-        id: crypto.randomUUID(),
+        id: adminId,
         name: "Campus Admin",
         email: "admin@college.local",
         passwordHash: null,
@@ -26,7 +29,7 @@ function createSeed() {
         createdAt: now
       },
       {
-        id: crypto.randomUUID(),
+        id: studentId,
         name: "Demo Student",
         email: "student@college.local",
         passwordHash: null,
@@ -36,14 +39,14 @@ function createSeed() {
     ],
     events: [
       {
-        id: crypto.randomUUID(),
+        id: eventId,
         title: "Innovation Expo 2026",
         description: "A campus showcase for projects, startups, robotics demos, and student-led workshops.",
         location: "Main Auditorium",
         date: "2026-04-18",
         time: "10:00",
         capacity: 250,
-        createdBy: "seed",
+        createdBy: adminId,
         createdAt: now
       }
     ],
