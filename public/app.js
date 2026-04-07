@@ -256,13 +256,14 @@ async function refreshDashboard() {
 
 document.getElementById("loginForm").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const form = new FormData(event.currentTarget);
+  const formElement = event.currentTarget;
+  const form = new FormData(formElement);
   try {
     await api("/api/auth/login", {
       method: "POST",
       body: JSON.stringify(Object.fromEntries(form.entries()))
     });
-    event.currentTarget.reset();
+    formElement.reset();
     await refreshDashboard();
     showToast("Login successful.");
   } catch (error) {
@@ -272,13 +273,14 @@ document.getElementById("loginForm").addEventListener("submit", async (event) =>
 
 document.getElementById("registerForm").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const form = new FormData(event.currentTarget);
+  const formElement = event.currentTarget;
+  const form = new FormData(formElement);
   try {
     await api("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(Object.fromEntries(form.entries()))
     });
-    event.currentTarget.reset();
+    formElement.reset();
     await refreshDashboard();
     showToast("Student account created.");
   } catch (error) {
@@ -295,7 +297,8 @@ logoutBtn.addEventListener("click", async () => {
 
 document.getElementById("eventForm").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const form = new FormData(event.currentTarget);
+  const formElement = event.currentTarget;
+  const form = new FormData(formElement);
   const payload = Object.fromEntries(form.entries());
   payload.capacity = Number(payload.capacity);
 
@@ -304,7 +307,7 @@ document.getElementById("eventForm").addEventListener("submit", async (event) =>
       method: "POST",
       body: JSON.stringify(payload)
     });
-    event.currentTarget.reset();
+    formElement.reset();
     await refreshDashboard();
     showToast("Event created.");
   } catch (error) {
