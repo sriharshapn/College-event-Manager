@@ -31,6 +31,8 @@ npm start
 
 ## Notes
 
-- Data is stored in `data/db.json`.
+- Local development stores data in `data/db.json`.
+- On Vercel, the app now runs through `api/index.js` as a serverless function entrypoint.
+- Vercel does not provide persistent writable local disk for app state, so the deployment falls back to in-memory seeded data unless you connect a real database.
 - The browser camera scanner uses the `html5-qrcode` script loaded from a CDN.
-- For real production use, replace the simple cookie/token setup and file storage with a proper database and hardened auth flow.
+- For real production use, replace the simple cookie/token setup and temporary Vercel memory fallback with a proper database and hardened auth flow.
