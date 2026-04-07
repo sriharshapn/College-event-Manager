@@ -1,0 +1,13 @@
+{
+  "name": "college-event-manager",
+  "version": "1.0.0",
+  "description": "College event management app with auth, registrations, admin panel, and QR attendance",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "qrcode": "^1.5.4"
+  }
+}

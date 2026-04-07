@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Connect Events</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="https://unpkg.com/html5-qrcode" defer></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <div class="backdrop"></div>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">College Event Platform</p>
+        <h1>Campus Connect Events</h1>
+      </div>
+      <div class="topbar-actions">
+        <div id="userBadge" class="user-badge hidden"></div>
+        <button id="logoutBtn" class="ghost hidden">Logout</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section id="authSection" class="panel auth-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Plan, register, scan</p>
+          <h2>Run college events from one dashboard.</h2>
+          <p>
+            Students can discover and register for events, while admins can create events and mark attendance
+            instantly using QR codes.
+          </p>
+          <div class="credentials">
+            <p><strong>Admin demo:</strong> admin@college.local / admin123</p>
+            <p><strong>Student demo:</strong> student@college.local / student123</p>
+          </div>
+        </div>
+
+        <div class="auth-cards">
+          <form id="loginForm" class="card">
+            <h3>Login</h3>
+            <label>
+              Email
+              <input type="email" name="email" placeholder="you@college.edu" required />
+            </label>
+            <label>
+              Password
+              <input type="password" name="password" placeholder="Password" required />
+            </label>
+            <button type="submit">Sign In</button>
+          </form>
+
+          <form id="registerForm" class="card">
+            <h3>Create Student Account</h3>
+            <label>
+              Full Name
+              <input type="text" name="name" placeholder="Your name" required />
+            </label>
+            <label>
+              Email
+              <input type="email" name="email" placeholder="student@college.edu" required />
+            </label>
+            <label>
+              Password
+              <input type="password" name="password" placeholder="Choose a password" required />
+            </label>
+            <button type="submit">Register</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="dashboardSection" class="hidden">
+        <div class="panel intro-strip">
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h2 id="dashboardHeading">Welcome</h2>
+          </div>
+          <p id="dashboardDescription"></p>
+        </div>
+
+        <section id="studentPanel" class="hidden">
+          <div class="content-grid">
+            <div class="panel">
+              <div class="section-title">
+                <h3>Upcoming Events</h3>
+                <p>Browse event descriptions and reserve your spot.</p>
+              </div>
+              <div id="eventsList" class="cards-grid"></div>
+            </div>
+
+            <div class="panel">
+              <div class="section-title">
+                <h3>My Registrations</h3>
+                <p>Your QR passes will appear here after registration.</p>
+              </div>
+              <div id="registrationList" class="cards-grid"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="adminPanel" class="hidden">
+          <div class="admin-grid">
+            <div class="panel">
+              <div class="section-title">
+                <h3>Create Event</h3>
+                <p>Add new events with descriptions, location, and capacity.</p>
+              </div>
+              <form id="eventForm" class="stacked-form">
+                <label>
+                  Event Title
+                  <input type="text" name="title" placeholder="Tech Fest 2026" required />
+                </label>
+                <label>
+                  Description
+                  <textarea name="description" rows="4" placeholder="Describe the event" required></textarea>
+                </label>
+                <label>
+                  Location
+                  <input type="text" name="location" placeholder="Seminar Hall A" required />
+                </label>
+                <div class="row">
+                  <label>
+                    Date
+                    <input type="date" name="date" required />
+                  </label>
+                  <label>
+                    Time
+                    <input type="time" name="time" required />
+                  </label>
+                  <label>
+                    Capacity
+                    <input type="number" min="1" name="capacity" required />
+                  </label>
+                </div>
+                <button type="submit">Create Event</button>
+              </form>
+            </div>
+
+            <div class="panel">
+              <div class="section-title">
+                <h3>Attendance Scanner</h3>
+                <p>Scan student QR codes or paste a token manually.</p>
+              </div>
+              <div id="scannerRegion" class="scanner-region">
+                <div id="qr-reader"></div>
+              </div>
+              <div class="row scanner-controls">
+                <input id="manualTokenInput" type="text" placeholder="Paste QR token manually" />
+                <button id="manualMarkBtn" type="button">Mark Attendance</button>
+              </div>
+              <div id="scanResult" class="scan-result muted">Scanner idle.</div>
+            </div>
+          </div>
+
+          <div class="admin-grid second-row">
+            <div class="panel">
+              <div class="section-title">
+                <h3>Overview</h3>
+                <p>Quick stats for admins.</p>
+              </div>
+              <div id="statsGrid" class="stats-grid"></div>
+            </div>
+
+            <div class="panel">
+              <div class="section-title">
+                <h3>Recent Activity</h3>
+                <p>Latest registrations and attendance updates.</p>
+              </div>
+              <div id="recentActivity" class="activity-list"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-title">
+              <h3>All Events</h3>
+              <p>Review attendance and registration levels across the campus calendar.</p>
+            </div>
+            <div id="adminEventsList" class="cards-grid"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <div id="toast" class="toast hidden"></div>
+  </body>
+</html>
