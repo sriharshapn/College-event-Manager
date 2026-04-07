@@ -166,7 +166,7 @@ app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
     runtime: IS_VERCEL ? "vercel" : "node",
-    storage: USE_POSTGRES ? "postgres" : "local-file"
+    storage: USE_POSTGRES ? "postgres" : IS_VERCEL ? "memory" : "local-file"
   });
 });
 
@@ -449,11 +449,7 @@ app.get("*", (_req, res) => {
 
 app.use((error, _req, res, _next) => {
   console.error("Unhandled request error", error);
-  res.status(500).json({
-    error: IS_VERCEL && !USE_POSTGRES
-      ? "Server storage is not configured. Set DATABASE_URL on Vercel."
-      : "Internal server error"
-  });
+  res.status(500).json({ error: "Internal server error" });
 });
 
 storage.ready().catch((error) => {

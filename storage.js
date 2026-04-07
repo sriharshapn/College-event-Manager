@@ -11,6 +11,7 @@ const USE_POSTGRES = Boolean(DATABASE_URL);
 
 let pool = null;
 let initPromise = null;
+let inMemoryDb = null;
 
 function createSeed() {
   const now = new Date().toISOString();
@@ -72,6 +73,24 @@ function saveLocalDb(db) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
 }
 
+function ensureMemoryDb(hashPassword) {
+  if (!inMemoryDb) {
+    const seed = createSeed();
+    seed.users[0].passwordHash = hashPassword("admin123");
+    seed.users[1].passwordHash = hashPassword("student123");
+    inMemoryDb = seed;
+  }
+}
+
+function loadMemoryDb(hashPassword) {
+  ensureMemoryDb(hashPassword);
+  return inMemoryDb;
+}
+
+function saveMemoryDb(db) {
+  inMemoryDb = db;
+}
+
 function getPool() {
   if (!pool) {
     pool = new Pool({
@@ -85,7 +104,7 @@ function getPool() {
 async function ensurePostgres(hashPassword) {
   if (!USE_POSTGRES) {
     if (IS_VERCEL) {
-      throw new Error("DATABASE_URL is required on Vercel for persistent storage.");
+      ensureMemoryDb(hashPassword);
     }
     return;
   }
@@ -229,6 +248,11 @@ function createStorage(hashPassword) {
         return rows[0] ? mapUser(rows[0]) : null;
       }
 
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        return db.users.find((user) => user.email === email) || null;
+      }
+
       const db = loadLocalDb(hashPassword);
       return db.users.find((user) => user.email === email) || null;
     },
@@ -240,6 +264,11 @@ function createStorage(hashPassword) {
         return rows[0] ? mapUser(rows[0]) : null;
       }
 
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        return db.users.find((user) => user.id === id) || null;
+      }
+
       const db = loadLocalDb(hashPassword);
       return db.users.find((user) => user.id === id) || null;
     },
@@ -249,6 +278,11 @@ function createStorage(hashPassword) {
         await ensurePostgres(hashPassword);
         const rows = await query("SELECT COUNT(*)::int AS count FROM users WHERE role = 'student'");
         return Number(rows[0].count);
+      }
+
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        return db.users.filter((user) => user.role === "student").length;
       }
 
       const db = loadLocalDb(hashPassword);
@@ -269,6 +303,13 @@ function createStorage(hashPassword) {
         return mapUser(rows[0]);
       }
 
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        db.users.push(user);
+        saveMemoryDb(db);
+        return user;
+      }
+
       const db = loadLocalDb(hashPassword);
       db.users.push(user);
       saveLocalDb(db);
@@ -282,6 +323,11 @@ function createStorage(hashPassword) {
         return rows.map(mapEvent);
       }
 
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        return db.events.slice().sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`));
+      }
+
       const db = loadLocalDb(hashPassword);
       return db.events.slice().sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`));
     },
@@ -291,6 +337,11 @@ function createStorage(hashPassword) {
         await ensurePostgres(hashPassword);
         const rows = await query("SELECT * FROM events WHERE id = $1 LIMIT 1", [id]);
         return rows[0] ? mapEvent(rows[0]) : null;
+      }
+
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        return db.events.find((event) => event.id === id) || null;
       }
 
       const db = loadLocalDb(hashPassword);
@@ -319,6 +370,13 @@ function createStorage(hashPassword) {
           ]
         );
         return mapEvent(rows[0]);
+      }
+
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        db.events.push(event);
+        saveMemoryDb(db);
+        return event;
       }
 
       const db = loadLocalDb(hashPassword);
@@ -360,6 +418,22 @@ function createStorage(hashPassword) {
         return rows[0] ? mapEvent(rows[0]) : null;
       }
 
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        const event = db.events.find((item) => item.id === eventId);
+        if (!event) {
+          return null;
+        }
+        event.title = changes.title ?? event.title;
+        event.description = changes.description ?? event.description;
+        event.location = changes.location ?? event.location;
+        event.date = changes.date ?? event.date;
+        event.time = changes.time ?? event.time;
+        event.capacity = changes.capacity ?? event.capacity;
+        saveMemoryDb(db);
+        return event;
+      }
+
       const db = loadLocalDb(hashPassword);
       const event = db.events.find((item) => item.id === eventId);
       if (!event) {
@@ -382,6 +456,11 @@ function createStorage(hashPassword) {
         return rows.map(mapRegistration);
       }
 
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        return db.registrations.slice().sort((a, b) => b.registeredAt.localeCompare(a.registeredAt));
+      }
+
       const db = loadLocalDb(hashPassword);
       return db.registrations.slice().sort((a, b) => b.registeredAt.localeCompare(a.registeredAt));
     },
@@ -391,6 +470,11 @@ function createStorage(hashPassword) {
         await ensurePostgres(hashPassword);
         const rows = await query("SELECT COUNT(*)::int AS count FROM registrations WHERE status = 'attended'");
         return Number(rows[0].count);
+      }
+
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        return db.registrations.filter((registration) => registration.status === "attended").length;
       }
 
       const db = loadLocalDb(hashPassword);
@@ -404,6 +488,11 @@ function createStorage(hashPassword) {
         return rows.map(mapRegistration);
       }
 
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        return db.registrations.filter((registration) => registration.eventId === eventId);
+      }
+
       const db = loadLocalDb(hashPassword);
       return db.registrations.filter((registration) => registration.eventId === eventId);
     },
@@ -413,6 +502,13 @@ function createStorage(hashPassword) {
         await ensurePostgres(hashPassword);
         const rows = await query("SELECT * FROM registrations WHERE user_id = $1 ORDER BY registered_at DESC", [userId]);
         return rows.map(mapRegistration);
+      }
+
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        return db.registrations
+          .filter((registration) => registration.userId === userId)
+          .sort((a, b) => b.registeredAt.localeCompare(a.registeredAt));
       }
 
       const db = loadLocalDb(hashPassword);
@@ -429,6 +525,11 @@ function createStorage(hashPassword) {
           [eventId, userId]
         );
         return rows[0] ? mapRegistration(rows[0]) : null;
+      }
+
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        return db.registrations.find((registration) => registration.eventId === eventId && registration.userId === userId) || null;
       }
 
       const db = loadLocalDb(hashPassword);
@@ -457,6 +558,13 @@ function createStorage(hashPassword) {
         return mapRegistration(rows[0]);
       }
 
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        db.registrations.push(registration);
+        saveMemoryDb(db);
+        return registration;
+      }
+
       const db = loadLocalDb(hashPassword);
       db.registrations.push(registration);
       saveLocalDb(db);
@@ -468,6 +576,11 @@ function createStorage(hashPassword) {
         await ensurePostgres(hashPassword);
         const rows = await query("SELECT * FROM registrations WHERE qr_token = $1 LIMIT 1", [qrToken]);
         return rows[0] ? mapRegistration(rows[0]) : null;
+      }
+
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        return db.registrations.find((registration) => registration.qrToken === qrToken) || null;
       }
 
       const db = loadLocalDb(hashPassword);
@@ -488,6 +601,18 @@ function createStorage(hashPassword) {
           [registrationId, attendedAt]
         );
         return rows[0] ? mapRegistration(rows[0]) : null;
+      }
+
+      if (IS_VERCEL) {
+        const db = loadMemoryDb(hashPassword);
+        const registration = db.registrations.find((item) => item.id === registrationId);
+        if (!registration) {
+          return null;
+        }
+        registration.status = "attended";
+        registration.attendedAt = attendedAt;
+        saveMemoryDb(db);
+        return registration;
       }
 
       const db = loadLocalDb(hashPassword);

@@ -47,6 +47,7 @@ On first boot, the app will automatically:
 - Local development stores data in `data/db.json`.
 - On Vercel, the app now runs through `api/index.js` as a serverless function entrypoint.
 - Persistent production storage on Vercel requires `DATABASE_URL`.
-- If `DATABASE_URL` is missing on Vercel, requests will fail with a clear storage configuration error instead of silently pretending data is durable.
+- If `DATABASE_URL` is missing on Vercel, the app now falls back to demo-only in-memory storage.
+- In demo mode, users, events, registrations, and attendance can reset whenever the serverless instance restarts.
 - The browser camera scanner uses the `html5-qrcode` script loaded from a CDN.
 - The current app auto-initializes its database schema, but the auth/session flow is still intentionally lightweight and should be hardened before serious production use.
